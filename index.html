@@ -333,7 +333,6 @@
                 } else {
                     messageDiv.className = isUser ? 'user-message message' : 'bot-message message';
                     messageDiv.innerHTML = `
-                        <div class="message-header">${isUser ? 'You' : 'Assistant'}</div>
                         <div class="message-content">${content}</div>
                         <div class="message-time">${getCurrentTime()}</div>
                     `;
