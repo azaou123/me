@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
         body {
             background-color: #f8f9fa;
         }
+
         .chat-container {
             max-width: 600px;
             margin: 20px auto;
@@ -20,6 +22,7 @@
             height: 500px;
             overflow-y: auto;
         }
+
         .user-message {
             background-color: #007bff;
             color: white;
@@ -29,6 +32,7 @@
             max-width: 70%;
             align-self: flex-end;
         }
+
         .bot-message {
             background-color: #e9ecef;
             color: black;
@@ -37,6 +41,7 @@
             margin: 10px;
             max-width: 70%;
         }
+
         .input-container {
             max-width: 600px;
             margin: 10px auto;
@@ -45,6 +50,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1 class="text-center my-4">Chat with Gemini</h1>
@@ -52,7 +58,8 @@
             <!-- Chat messages will be appended here -->
         </div>
         <div class="input-container">
-            <input type="text" class="form-control" id="userInput" placeholder="Type your message..." autocomplete="off">
+            <input type="text" class="form-control" id="userInput" placeholder="Type your message..."
+                autocomplete="off">
             <button class="btn btn-primary" id="sendButton">Send</button>
         </div>
     </div>
@@ -60,97 +67,90 @@
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const chatContainer = document.getElementById('chatContainer');
-        const userInput = document.getElementById('userInput');
-        const sendButton = document.getElementById('sendButton');
-        const apiKey = 'AIzaSyBzm9whwtPcdFsNaChNIvoYLShIR7_lVn8'; // Replace with your Gemini API key
-        const portfolioContent = await fetchPortfolioContent();
-        const portfolioFileUrl = 'https://azaou123.github.io/me/me.txt';
-        
+        (async () => {
+            const chatContainer = document.getElementById('chatContainer');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const apiKey = 'AIzaSyBzm9whwtPcdFsNaChNIvoYLShIR7_lVn8'; // Replace with your Gemini API key
+            const portfolioFileUrl = 'https://azaou123.github.io/me/me.txt';
 
-        // Function to add a message to the chat container
-        function addMessage(message, isUser) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = isUser ? 'user-message ms-auto' : 'bot-message';
-            messageDiv.textContent = message;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // Function to call Gemini API
-        async function getGeminiResponse(message) {
-            const prompt = `You are a professional portfolio assistant. Respond concisely and professionally using this portfolio information: ${portfolioContent}\n\nUser question: ${message}`;
-            const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
-            try {
-                const response = await fetch(`${url}?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{ text: prompt }]
-                        }]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch response from Gemini API');
+            async function fetchPortfolioContent() {
+                try {
+                    const response = await fetch(portfolioFileUrl);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch portfolio file');
+                    }
+                    return await response.text();
+                } catch (error) {
+                    console.error('Error fetching portfolio:', error);
+                    return 'Portfolio data unavailable. Please ask about my work directly.';
                 }
-
-                const data = await response.json();
-                const botResponse = data.candidates[0].content.parts[0].text;
-                return botResponse;
-            } catch (error) {
-                console.error('Error:', error);
-                return 'Sorry, something went wrong. Please try again.';
             }
-        }
 
-        // Event listener for send button
-        sendButton.addEventListener('click', async () => {
-            const message = userInput.value.trim();
-            if (message) {
-                addMessage(message, true);
-                userInput.value = '';
+            const portfolioContent = await fetchPortfolioContent();
 
-                // Show loading indicator
-                addMessage('...', false);
-
-                // Get response from Gemini API
-                const botResponse = await getGeminiResponse(message);
-
-                // Remove loading indicator
-                chatContainer.removeChild(chatContainer.lastChild);
-
-                // Add bot response
-                addMessage(botResponse, false);
+            function addMessage(message, isUser) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = isUser ? 'user-message ms-auto' : 'bot-message';
+                messageDiv.textContent = message;
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
-        });
 
-        // Event listener for Enter key
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendButton.click();
-            }
-        });
+            async function getGeminiResponse(message) {
+                const prompt = `You are a professional portfolio assistant. Respond concisely and professionally using this portfolio information: ${portfolioContent}\n\nUser question: ${message}`;
+                const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+                try {
+                    const response = await fetch(`${url}?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: prompt }]
+                            }]
+                        })
+                    });
 
-        // Initial welcome message
-        addMessage('Hello! How can I assist you today?', false);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch response from Gemini API');
+                    }
 
-        // Function to fetch portfolio file content
-        async function fetchPortfolioContent() {
-            try {
-                const response = await fetch(portfolioFileUrl);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch portfolio file');
+                    const data = await response.json();
+                    const botResponse = data.candidates[0].content.parts[0].text;
+                    return botResponse;
+                } catch (error) {
+                    console.error('Error:', error);
+                    return 'Sorry, something went wrong. Please try again.';
                 }
-                return await response.text();
-            } catch (error) {
-                console.error('Error fetching portfolio:', error);
-                return 'Portfolio data unavailable. Please ask about my work directly.';
             }
-        }
+
+            sendButton.addEventListener('click', async () => {
+                const message = userInput.value.trim();
+                if (message) {
+                    addMessage(message, true);
+                    userInput.value = '';
+
+                    addMessage('...', false);
+
+                    const botResponse = await getGeminiResponse(message);
+
+                    chatContainer.removeChild(chatContainer.lastChild);
+                    addMessage(botResponse, false);
+                }
+            });
+
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+
+            addMessage('Hello! How can I assist you today?', false);
+        })();
     </script>
+
 </body>
+
 </html>
