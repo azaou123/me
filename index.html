@@ -4,104 +4,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chat App</title>
+    <title>Enhanced Chat with Gemini</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --user-message-bg: #4361ee;
+            --bot-message-bg: #e9ecef;
+            --error-color: #e63946;
+            --success-color: #2a9d8f;
+        }
+
         body {
             background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .chat-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 20px auto;
             border: 1px solid #ddd;
             border-radius: 10px;
             background-color: #fff;
             padding: 20px;
-            height: 500px;
+            height: 70vh;
             overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            border-radius: 18px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            max-width: 80%;
+            position: relative;
+            word-wrap: break-word;
+            line-height: 1.5;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .user-message {
-            background-color: #007bff;
+            background-color: var(--user-message-bg);
             color: white;
-            border-radius: 15px;
-            padding: 10px;
-            margin: 10px;
-            max-width: 70%;
             align-self: flex-end;
+            border-bottom-right-radius: 4px;
         }
 
         .bot-message {
-            background-color: #e9ecef;
-            color: black;
-            border-radius: 15px;
-            padding: 10px;
-            margin: 10px;
-            max-width: 70%;
+            background-color: var(--bot-message-bg);
+            color: var(--dark-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: var(--bot-message-bg);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #666;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
         }
 
         .input-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 10px auto;
             display: flex;
             gap: 10px;
+            align-items: center;
+        }
+
+        .input-container input {
+            flex: 1;
+            border-radius: 20px;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .input-container input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+
+        .btn-send {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-send:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        .btn-send:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .bot-message .message-time {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            background-color: rgba(230, 57, 70, 0.1);
+        }
+
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .user-message .message-header {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .bot-message .message-header {
+            color: rgba(0, 0, 0, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 65vh;
+                padding: 15px;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 10px 14px;
+            }
+            
+            .input-container {
+                padding: 0 10px;
+            }
+        }
+
+        /* Markdown-like styling for bot responses */
+        .bot-message strong {
+            font-weight: bold;
+        }
+
+        .bot-message em {
+            font-style: italic;
+        }
+
+        .bot-message ul, .bot-message ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .bot-message a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .bot-message a:hover {
+            text-decoration: underline;
+        }
+
+        .bot-message code {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-send.loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-send.loading i {
+            display: none;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1 class="text-center my-4">Chat with Gemini</h1>
+        <h1 class="text-center my-4">Chat with Portfolio Assistant</h1>
+        <div class="welcome-message">
+            <p>Ask me anything about my portfolio, skills, or experience!</p>
+        </div>
         <div class="chat-container" id="chatContainer">
             <!-- Chat messages will be appended here -->
         </div>
         <div class="input-container">
-            <input type="text" class="form-control" id="userInput" placeholder="Type your message..."
-                autocomplete="off">
-            <button class="btn btn-primary" id="sendButton">Send</button>
+            <input type="text" class="form-control" id="userInput" placeholder="Type your message here..." autocomplete="off">
+            <button class="btn-send" id="sendButton" disabled>
+                <i class="fas fa-paper-plane"></i>
+                <span class="spinner"></span>
+            </button>
         </div>
     </div>
 
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        (async () => {
+        document.addEventListener('DOMContentLoaded', function() {
             const chatContainer = document.getElementById('chatContainer');
             const userInput = document.getElementById('userInput');
             const sendButton = document.getElementById('sendButton');
             const apiKey = 'AIzaSyBzm9whwtPcdFsNaChNIvoYLShIR7_lVn8'; // Replace with your Gemini API key
             const portfolioFileUrl = 'https://azaou123.github.io/me/me.txt';
+            let isWaitingForResponse = false;
+            let conversationHistory = [];
 
-            async function fetchPortfolioContent() {
-                try {
-                    const response = await fetch(portfolioFileUrl);
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch portfolio file');
-                    }
-                    return await response.text();
-                } catch (error) {
-                    console.error('Error fetching portfolio:', error);
-                    return 'Portfolio data unavailable. Please ask about my work directly.';
-                }
+            // Enable send button when there's input
+            userInput.addEventListener('input', function() {
+                sendButton.disabled = this.value.trim() === '' || isWaitingForResponse;
+            });
+
+            // Format current time for messages
+            function getCurrentTime() {
+                const now = new Date();
+                return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
 
-            const portfolioContent = await fetchPortfolioContent();
-
-            function addMessage(message, isUser) {
+            // Add message to chat
+            function addMessage(content, isUser, isTyping = false) {
                 const messageDiv = document.createElement('div');
-                messageDiv.className = isUser ? 'user-message ms-auto' : 'bot-message';
-                messageDiv.textContent = message;
+                
+                if (isTyping) {
+                    messageDiv.className = 'typing-indicator';
+                    messageDiv.id = 'typingIndicator';
+                    messageDiv.innerHTML = `
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    `;
+                } else {
+                    messageDiv.className = isUser ? 'user-message message' : 'bot-message message';
+                    messageDiv.innerHTML = `
+                        <div class="message-header">${isUser ? 'You' : 'Assistant'}</div>
+                        <div class="message-content">${content}</div>
+                        <div class="message-time">${getCurrentTime()}</div>
+                    `;
+                    
+                    // Add to conversation history
+                    conversationHistory.push({
+                        role: isUser ? 'user' : 'assistant',
+                        content: content,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                
                 chatContainer.appendChild(messageDiv);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
 
-            async function getGeminiResponse(message) {
-                const prompt = `You are a professional portfolio assistant. Respond concisely and professionally using this portfolio information: ${portfolioContent}\n\nUser question: ${message}`;
-                const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+            // Remove typing indicator
+            function removeTypingIndicator() {
+                const indicator = document.getElementById('typingIndicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+
+            // Show error message
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = message;
+                chatContainer.appendChild(errorDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            // Fetch portfolio content with retry logic
+            async function fetchPortfolioContentWithRetry(retries = 3, delay = 1000) {
                 try {
-                    const response = await fetch(`${url}?key=${apiKey}`, {
+                    const response = await fetch(portfolioFileUrl);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return await response.text();
+                } catch (error) {
+                    if (retries > 0) {
+                        console.log(`Retrying... ${retries} attempts left`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchPortfolioContentWithRetry(retries - 1, delay * 2);
+                    }
+                    throw error;
+                }
+            }
+
+            // Get Gemini response with enhanced error handling
+            async function getGeminiResponse(message) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                
+                try {
+                    // Add context from conversation history
+                    const historyContext = conversationHistory
+                        .slice(-4) // Get last 4 messages for context
+                        .map(msg => `${msg.role}: ${msg.content}`)
+                        .join('\n');
+                    
+                    const prompt = `You are a professional portfolio assistant. You are helping someone learn about my work.
+                    
+                    Portfolio Information:
+                    ${portfolioContent}
+                    
+                    Recent Conversation Context:
+                    ${historyContext}
+                    
+                    Current Question:
+                    ${message}
+                    
+                    Please respond concisely and professionally. Format your response with clear paragraphs and bullet points when appropriate.`;
+                    
+                    const response = await fetch(url, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -109,48 +398,89 @@
                         body: JSON.stringify({
                             contents: [{
                                 parts: [{ text: prompt }]
-                            }]
+                            }],
+                            generationConfig: {
+                                temperature: 0.7,
+                                topP: 0.9,
+                                maxOutputTokens: 1000
+                            }
                         })
                     });
 
                     if (!response.ok) {
-                        throw new Error('Failed to fetch response from Gemini API');
+                        const errorData = await response.json();
+                        throw new Error(errorData.error?.message || 'Failed to get response from API');
                     }
 
                     const data = await response.json();
-                    const botResponse = data.candidates[0].content.parts[0].text;
-                    return botResponse;
+                    
+                    if (!data.candidates || !data.candidates[0].content.parts[0].text) {
+                        throw new Error('Unexpected response format from API');
+                    }
+                    
+                    return data.candidates[0].content.parts[0].text;
                 } catch (error) {
-                    console.error('Error:', error);
-                    return 'Sorry, something went wrong. Please try again.';
+                    console.error('API Error:', error);
+                    throw error;
                 }
             }
 
-            sendButton.addEventListener('click', async () => {
+            // Handle sending a message
+            async function sendMessage() {
                 const message = userInput.value.trim();
-                if (message) {
-                    addMessage(message, true);
-                    userInput.value = '';
+                if (!message || isWaitingForResponse) return;
 
-                    addMessage('...', false);
-
+                isWaitingForResponse = true;
+                sendButton.disabled = true;
+                sendButton.classList.add('loading');
+                
+                addMessage(message, true);
+                userInput.value = '';
+                
+                // Show typing indicator
+                addMessage('', false, true);
+                
+                try {
                     const botResponse = await getGeminiResponse(message);
-
-                    chatContainer.removeChild(chatContainer.lastChild);
+                    removeTypingIndicator();
                     addMessage(botResponse, false);
+                } catch (error) {
+                    removeTypingIndicator();
+                    showError(`Sorry, I couldn't process your request. ${error.message}`);
+                    console.error('Error:', error);
+                } finally {
+                    isWaitingForResponse = false;
+                    sendButton.disabled = userInput.value.trim() === '';
+                    sendButton.classList.remove('loading');
+                    userInput.focus();
                 }
-            });
+            }
 
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            
             userInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendButton.click();
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
                 }
             });
 
-            addMessage('Hello! How can I assist you today?', false);
-        })();
+            // Initial welcome message
+            addMessage("Hello! I'm your portfolio assistant. I can tell you about my skills, experience, and projects. What would you like to know?", false);
+
+            // Load portfolio content in the background
+            (async function() {
+                try {
+                    portfolioContent = await fetchPortfolioContentWithRetry();
+                    console.log('Portfolio content loaded successfully');
+                } catch (error) {
+                    console.error('Failed to load portfolio content:', error);
+                    showError("Note: Some portfolio information might not be available right now.");
+                    portfolioContent = "Portfolio data could not be loaded. Please ask specific questions about my work.";
+                }
+            })();
+        });
     </script>
-
 </body>
-
 </html>
