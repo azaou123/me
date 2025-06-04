@@ -502,7 +502,7 @@
 
             <div class="input-container">
                 <button class="btn-clear" id="clearButton" title="Clear chat">
-                    <i class="fas fa-trash"></i> Clear
+                    <i class="fas fa-trash"></i>
                 </button>
                 <div class="input-wrapper">
                     <textarea 
@@ -1043,7 +1043,7 @@ More details:
             const clearButton = document.getElementById('clearButton');
             const exportButton = document.createElement('button');
             exportButton.className = 'btn-clear';
-            exportButton.innerHTML = '<i class="fas fa-download"></i> Export';
+            exportButton.innerHTML = '<i class="fas fa-download"></i>';
             exportButton.title = 'Export conversation';
             exportButton.onclick = () => window.portfolioChat.exportConversation();
             clearButton.parentNode.insertBefore(exportButton, clearButton);
