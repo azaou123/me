@@ -64,7 +64,8 @@
         const userInput = document.getElementById('userInput');
         const sendButton = document.getElementById('sendButton');
         const apiKey = 'AIzaSyBzm9whwtPcdFsNaChNIvoYLShIR7_lVn8'; // Replace with your Gemini API key
-        const portfolioFileUrl = 'https://example.com/me.txt';
+        const portfolioContent = await fetchPortfolioContent();
+        const portfolioFileUrl = 'https://azaou123.github.io/me/me.txt';
         
 
         // Function to add a message to the chat container
@@ -136,6 +137,20 @@
 
         // Initial welcome message
         addMessage('Hello! How can I assist you today?', false);
+
+        // Function to fetch portfolio file content
+        async function fetchPortfolioContent() {
+            try {
+                const response = await fetch(portfolioFileUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch portfolio file');
+                }
+                return await response.text();
+            } catch (error) {
+                console.error('Error fetching portfolio:', error);
+                return 'Portfolio data unavailable. Please ask about my work directly.';
+            }
+        }
     </script>
 </body>
 </html>
