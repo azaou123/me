@@ -64,6 +64,8 @@
         const userInput = document.getElementById('userInput');
         const sendButton = document.getElementById('sendButton');
         const apiKey = 'AIzaSyBzm9whwtPcdFsNaChNIvoYLShIR7_lVn8'; // Replace with your Gemini API key
+        const portfolioFileUrl = 'https://example.com/me.txt';
+        
 
         // Function to add a message to the chat container
         function addMessage(message, isUser) {
@@ -76,6 +78,7 @@
 
         // Function to call Gemini API
         async function getGeminiResponse(message) {
+            const prompt = `You are a professional portfolio assistant. Respond concisely and professionally using this portfolio information: ${portfolioContent}\n\nUser question: ${message}`;
             const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
             try {
                 const response = await fetch(`${url}?key=${apiKey}`, {
@@ -85,7 +88,7 @@
                     },
                     body: JSON.stringify({
                         contents: [{
-                            parts: [{ text: message }]
+                            parts: [{ text: prompt }]
                         }]
                     })
                 });
