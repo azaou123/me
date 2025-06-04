@@ -257,6 +257,23 @@
         .btn-send.loading i {
             display: none;
         }
+        .bot-message .highlight {
+            background-color: rgba(67, 97, 238, 0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .bot-message .divider {
+            border-top: 1px solid #ddd;
+            margin: 12px 0;
+        }
+        
+        .concise-response {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 
@@ -371,25 +388,28 @@
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                 
                 try {
-                    // Add context from conversation history
-                    const historyContext = conversationHistory
-                        .slice(-4) // Get last 4 messages for context
-                        .map(msg => `${msg.role}: ${msg.content}`)
-                        .join('\n');
+                    const prompt = `You are a professional portfolio assistant. When answering questions:
                     
-                    const prompt = `You are a professional portfolio assistant. You are helping someone learn about my work.
+                    1. FIRST provide a very short direct answer (1-2 sentences max) marked with <concise> tags
+                    2. THEN provide more details if needed
+                    3. Format technical terms with <highlight> tags
+                    4. Use bullet points for lists
+                    5. Keep professional but concise tone
                     
                     Portfolio Information:
                     ${portfolioContent}
                     
-                    Recent Conversation Context:
-                    ${historyContext}
-                    
                     Current Question:
                     ${message}
                     
-                    Please respond concisely and professionally. Format your response with clear paragraphs and bullet points when appropriate.`;
+                    Example Response Format:
+                    <concise>Based on the portfolio, Badr's strongest language is JavaScript.</concise>
                     
+                    More details:
+                    - Extensive experience with <highlight>React</highlight> and <highlight>Node.js</highlight>
+                    - 5+ years professional use
+                    - Used in most portfolio projects`;
+
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: {
@@ -400,31 +420,29 @@
                                 parts: [{ text: prompt }]
                             }],
                             generationConfig: {
-                                temperature: 0.7,
-                                topP: 0.9,
-                                maxOutputTokens: 1000
+                                temperature: 0.5, // More focused responses
+                                topP: 0.8,
+                                maxOutputTokens: 500 // Shorter responses
                             }
                         })
                     });
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error?.message || 'Failed to get response from API');
-                    }
-
                     const data = await response.json();
+                    let botResponse = data.candidates[0].content.parts[0].text;
                     
-                    if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-                        throw new Error('Unexpected response format from API');
-                    }
+                    // Format the response for HTML display
+                    botResponse = botResponse
+                        .replace(/<concise>(.*?)<\/concise>/g, '<div class="concise-response">$1</div>')
+                        .replace(/<highlight>(.*?)<\/highlight>/g, '<span class="highlight">$1</span>')
+                        .replace(/\n- /g, '<br>- ') // Convert markdown bullets to HTML
+                        .replace(/\n\n/g, '<div class="divider"></div>'); // Add dividers between paragraphs
                     
-                    return data.candidates[0].content.parts[0].text;
+                    return botResponse;
                 } catch (error) {
                     console.error('API Error:', error);
                     throw error;
                 }
             }
-
             // Handle sending a message
             async function sendMessage() {
                 const message = userInput.value.trim();
